@@ -1,5 +1,5 @@
 import json
-import numpy as np
+import math
 from itertools import combinations
 from config import get_settings
 from services.grader import embed_text
@@ -8,33 +8,24 @@ settings = get_settings()
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:
-    if not a or not b:
+    if not a or not b or len(a) != len(b):
         return 0.0
-    va, vb = np.array(a), np.array(b)
-    denom = np.linalg.norm(va) * np.linalg.norm(vb)
-    if denom == 0:
+    dot_product = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(x * x for x in b))
+    if norm_a * norm_b == 0:
         return 0.0
-    return float(np.dot(va, vb) / denom)
+    return dot_product / (norm_a * norm_b)
 
 
 def compute_tfidf_similarity(text_a: str, text_b: str) -> float:
     if not text_a or not text_b or not text_a.strip() or not text_b.strip():
         return 0.0
-    try:
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        vectorizer = TfidfVectorizer().fit_transform([text_a, text_b])
-        vectors = vectorizer.toarray()
-        va, vb = vectors[0], vectors[1]
-        denom = np.linalg.norm(va) * np.linalg.norm(vb)
-        if denom == 0:
-            return 0.0
-        return float(np.dot(va, vb) / denom)
-    except Exception:
-        words_a = set(text_a.lower().split())
-        words_b = set(text_b.lower().split())
-        if not words_a or not words_b:
-            return 0.0
-        return float(len(words_a & words_b) / max(len(words_a | words_b), 1))
+    words_a = set(text_a.lower().split())
+    words_b = set(text_b.lower().split())
+    if not words_a or not words_b:
+        return 0.0
+    return float(len(words_a & words_b) / max(len(words_a | words_b), 1))
 
 
 async def detect_collusion(scripts: list[dict], threshold: float) -> list[dict]:

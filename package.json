@@ -4,7 +4,7 @@
   "version": "2.0.0",
   "scripts": {
     "dev": "npm run --prefix frontend dev",
-    "build": "npm run --prefix frontend build",
+    "build": "npm install --prefix frontend && npm run --prefix frontend build",
     "preview": "npm run --prefix frontend preview"
   }
 }
